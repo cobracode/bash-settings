@@ -1,0 +1,5 @@
+# Ignore everything except specified files
+*
+
+!.bashrc
+!.bash_aliases
