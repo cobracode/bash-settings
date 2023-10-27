@@ -1,0 +1,1 @@
+/Users/ned/ned.sh
