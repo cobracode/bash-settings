@@ -23,6 +23,7 @@ alias ga='git add'
 alias gd='git diff'
 alias gs='git status'
 alias gf='git fetch'
+alias gl='git log'
 
 # Editing -------
 alias ffprobe='ffprobe -hide_banner'
