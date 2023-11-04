@@ -17,6 +17,18 @@ alias la='ls -A'
 # Mac
 alias l='ls -alFGhrt'
 
+
+# Git --------
+alias ga='git add'
+alias gd='git diff'
+alias gs='git status'
+alias gf='git fetch'
+
+# Editing -------
+alias ffprobe='ffprobe -hide_banner'
+alias ffmpeg='ffmpeg -hide_banner'
+
+
 echo 'TODO: Add datetime at start, end'
 
 echo 'END ned.sh'
