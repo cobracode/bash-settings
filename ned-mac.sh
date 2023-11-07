@@ -32,6 +32,6 @@ alias ffmpeg='ffmpeg -hide_banner'
 alias Y='youtube-dl --no-overwrites --no-mtime'
 
 
-echo 'TODO: Add datetime at start, end'
-
-echo 'END ned.sh'
+echo
+echo "   UPDATED  BASHRC SETTINGS   on $(date +%Y-%m-%d\ %H:%M:%S)"
+echo
