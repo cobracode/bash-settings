@@ -1,8 +1,8 @@
 echo 'BEGIN ned.sh'
 
 # Set variables -------------------------
-HISTSIZE=9999
-HISTFILESIZE=9999
+export HISTSIZE=9999
+export HISTFILESIZE=9999
 
 
 # Aliases -------------------------------
