@@ -8,6 +8,7 @@ HISTFILESIZE=9999
 # Aliases -------------------------------
 
 alias S='source ~/.zprofile'
+alias R='open -b com.microsoft.vscode ~/dev/repos/bash-settings'
 alias ll='ls -alF'
 alias la='ls -A'
 
