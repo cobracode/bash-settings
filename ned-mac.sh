@@ -29,6 +29,7 @@ alias gl='git log --oneline'
 # Editing -------
 alias ffprobe='ffprobe -hide_banner'
 alias ffmpeg='ffmpeg -hide_banner'
+alias Y='youtube-dl --no-overwrites --no-mtime'
 
 
 echo 'TODO: Add datetime at start, end'
