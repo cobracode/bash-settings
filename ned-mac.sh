@@ -4,10 +4,21 @@ echo 'BEGIN ned.sh'
 export HISTSIZE=9999
 export HISTFILESIZE=9999
 
+export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
+
+
+# Functions -----------------------------
+# function code {
+#     file = $1
+#     open -b com.microsoft.vscode ${file}
+# }
+
 
 # Aliases -------------------------------
 
+alias code='open -b com.microsoft.vscode'
 alias S='source ~/.zprofile'
+# alias R='code(~/dev/repos/bash-settings)'
 alias R='open -b com.microsoft.vscode ~/dev/repos/bash-settings'
 alias ll='ls -alF'
 alias la='ls -A'
