@@ -1,8 +1,8 @@
 echo 'BEGIN ned.sh'
 
 # Set variables -------------------------
-export HISTSIZE=9999
-export HISTFILESIZE=9999
+export HISTSIZE=99999
+export HISTFILESIZE=99999
 
 export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
 
@@ -12,6 +12,13 @@ export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBoo
 #     file = $1
 #     open -b com.microsoft.vscode ${file}
 # }
+
+# extractAudio <media file> <output file>
+function extractAudioFunc {
+	local mediaFile="$1"
+	local outputFile="$2"
+	ffmpeg -i "${mediaFile}" -vn -acodec copy "${outputFile}"
+}
 
 
 # Aliases -------------------------------
@@ -28,6 +35,7 @@ alias la='ls -A'
 
 # Mac
 alias l='ls -alFGhrt'
+alias history='history -500'
 
 
 # Git --------
@@ -41,6 +49,7 @@ alias gl='git log --oneline'
 alias ffprobe='ffprobe -hide_banner'
 alias ffmpeg='ffmpeg -hide_banner'
 alias Y='youtube-dl --no-overwrites --no-mtime'
+alias extractAudio='extractAudioFunc'
 
 
 echo
