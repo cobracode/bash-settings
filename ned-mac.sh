@@ -20,6 +20,34 @@ function extractAudioFunc {
 	ffmpeg -i "${mediaFile}" -vn -acodec copy "${outputFile}"
 }
 
+function moveLrfFiles {
+	local sourceDir="${1:-$(pwd)}"
+	local destDir="lrf"
+	local filePattern="*.LRF.mp4"
+	local fileCount=0
+
+    # If no files, exit
+    local numLrfFiles=$(find . -type f -name "${filePattern}" | wc -c)
+
+	echo "Number of .txt files: ${numLrfFiles}"
+
+    if [ "${numLrfFiles}" -eq 0 ]; then
+        echo "No .LRF files found in [${sourceDir}]"
+        return
+    fi
+
+	local file
+
+	for file in "${sourceDir}/${filePattern}"; do
+		if [ -f "${file}" ]; then
+			#mv -v "${file}" "${destDir}"
+			echo "moving file ${file}"
+			fileCount=$((fileCount+1))
+		fi
+	done
+	echo "Moved [${fileCount}] LRF files from [${sourceDir}] to [${destDir}]"
+}
+
 
 # Aliases -------------------------------
 
@@ -50,6 +78,7 @@ alias ffprobe='ffprobe -hide_banner'
 alias ffmpeg='ffmpeg -hide_banner'
 alias Y='youtube-dl --no-overwrites --no-mtime'
 alias extractAudio='extractAudioFunc'
+alias moveLrfFiles='moveLrfFiles'
 
 
 echo
