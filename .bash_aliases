@@ -73,16 +73,16 @@ function syncSongsHelperFunc {
 function syncSongsFunc {
 	local usbPath="$1"
 	local favDir="${MUSIC}/favs"
-	
+
 	# copy non-opus songs (receiver doesnt support opus yet :( )
 	find "${favDir}" -type l -not -iname '*.opus' -exec cp --verbose --dereference --no-clobber {} "${usbPath}" \;
-	
+
 	# convert and copy opus songs
 	#find "${favDir}" -type l -iname '*.opus' -exec bash -c 'echo "USB PATH: ffff $1"; ffmpeg -nostdin -n -i "$0" "${1}/${0}.aac"' $(basename {}) "${usbPath}" \;
 	#find "${favDir}" -type l -iname '*.opus' -exec echo "USB PATH: $(basename {})" \;
 	#find "${favDir}" -type l -iname '*.opus' -exec bash -c 'syncSongsHelperFunc "$0"' {} \;
-	#echo "USB PATH: ${usbPath}" 
-	
+	#echo "USB PATH: ${usbPath}"
+
 	while read -r file
 	do
 		local filename=$(basename "${file}")
@@ -109,9 +109,9 @@ function saveSongFunc {
 }
 
 function saveLastPlayedFunc {
-	local favDir="${SAVE}/Eros/favs"
+	local favDir="${SAVE}/favs"
 	mkdir --verbose --parents "${favDir}"
-	ln --verbose --symbolic "${LAST_PLAYED}" "${favDir}" 
+	ln --verbose --symbolic "${LAST_PLAYED}" "${favDir}"
 }
 
 
@@ -124,7 +124,7 @@ function snipMediaFunc {
 	local end="$2"
 	local file="$3"
 	local outFile="$4"
-	
+
 	ffmpeg -ss "$start" -to "$end" -i "$file" -c copy "$outFile"
 }
 
@@ -138,23 +138,23 @@ function vidHereFunc {
 	local dir="$1"
 	#local vid="$(find ${dir} -type f -size +1k -a \( -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
 	local vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | shuf -n 1)"
-	
+
 	while grep -q "${vid}" "${dir}/list.txt"; do
 		echo "Video ${vid} already played"
 		#vid="$(find ${dir} -type f -size +1k -a \(-iname '*.mov' -o -iname '*.tmp' -name '_Flash*' -o -iname '*.webp' -o -iname '*.gif' -o -name 'f_*' -o -iname '*.avi' -o -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
 		vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | shuf -n 1)"
 	done
-	
-	
+
+
 	ffprobe "${vid}"
-	
+
 	local last=$(realpath "${vid}")
 	export LAST_PLAYED="${last}"
-	
+
 	mpv --mute --loop "${vid}" &
 	ls -lh "${vid}"
 	echo "\"${vid}\""
-	
+
 	echo "${vid}" >> "${dir}/list.txt"
 }
 
@@ -166,7 +166,7 @@ function songHereFunc {
 	mpv "${song}" &
 	ls -lh "${song}"
 	echo "\"${song}\""
-	
+
 	local last=$(realpath "${song}")
 	export LAST_PLAYED="${last}"
 }
@@ -177,7 +177,7 @@ function songFunc {
 	mpv "${song}" &
 	ls -lh "${song}"
 	echo "\"${song}\""
-	
+
 	local last=$(realpath "${song}")
 	export LAST_PLAYED="${last}"
 }
@@ -202,7 +202,7 @@ function go {
 
 function findSong {
 	local songNamePortion="$@"
-	
+
 	echo "Finding song '$songNamePortion'"
 	echo
 	find $MUSIC -type f -iname "*${songNamePortion}*"
@@ -234,11 +234,11 @@ function convertToSmallestAac {
 function batchShrinkAudio() {
 	saveifs=$IFS
 	IFS=$(echo -en "\n\b")
-	
+
 	for file in $@; do
 		local numJobs=$(jobs | wc -l)
 		echo "$numJobs jobs running"
-		
+
 		if [ $numJobs -gt 6 ]; then
 			echo "Waiting for the next job to finish"
 			wait -n
@@ -246,11 +246,11 @@ function batchShrinkAudio() {
 			ffmpeg -nostdin -n -i "${file}" -ar 8000 -ac 1 -b:a 10K "${file}.opus" &
 		else
 			ffmpeg -nostdin -n -i "${file}" -ar 8000 -ac 1 -b:a 10K "${file}.opus" &
-		fi	
+		fi
 	done
-	
+
 	jobs
-	
+
 	IFS=$saveifs
 }
 
