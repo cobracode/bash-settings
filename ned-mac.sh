@@ -1,8 +1,17 @@
-echo 'BEGIN ned.sh'
+echo 'BEGIN ned-mac.sh'
 
 # Set variables -------------------------
-export HISTSIZE=99999
-export HISTFILESIZE=99999
+
+# /etc/zshrc seems to keep overriding this.
+# original prompt:
+# PROMPT='%n@%m %1~ %#'
+export PROMPT='%F{green}%n%f@%F{blue}%m%f:%F{cyan}%~%f$ '
+export PS1='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
+
+# /etc/zshrc seems to keep overriding this.
+# export HISTFILE=~/.ned_history
+# export HISTSIZE=999999
+# export SAVEHIST=$HISTSIZE
 
 export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
 
@@ -12,6 +21,12 @@ export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBoo
 #     file = $1
 #     open -b com.microsoft.vscode ${file}
 # }
+
+function my_traceroute {
+    local host="${1:-google.com}"
+    local maxHops="${2:-5}"
+    traceroute -m "${maxHops}" -q 1 -v "${host}" 28
+}
 
 # extractAudio <media file> <output file>
 function extractAudioFunc {
@@ -64,7 +79,10 @@ alias la='ls -A'
 # Mac
 alias l='ls -alFGhrt'
 alias history='history -500'
-
+alias networkUp='watch -n 3 ping -c 1 google.com'
+alias publicIp='curl ifconfig.me'
+alias localIp='ipconfig getifaddr en0'
+alias t='my_traceroute'
 
 # Git --------
 alias ga='git add'
