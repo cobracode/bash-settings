@@ -2,16 +2,16 @@ echo 'BEGIN ned-mac.sh'
 
 # Set variables -------------------------
 
-# /etc/zshrc seems to keep overriding this.
 # original prompt:
 # PROMPT='%n@%m %1~ %#'
-export PROMPT='%F{green}%n%f@%F{blue}%m%f:%F{cyan}%~%f$ '
-export PS1='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
+# export PROMPT='%F{green}%n%f@%F{blue}%m%f:%F{cyan}%~%f$ '
+export PROMPT='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
 
-# /etc/zshrc seems to keep overriding this.
-# export HISTFILE=~/.ned_history
-# export HISTSIZE=999999
-# export SAVEHIST=$HISTSIZE
+
+HISTFILE=${ZDOTDIR:-$HOME}/.ned_history
+HISTSIZE=99999
+SAVEHIST=99999
+setopt hist_ignore_all_dups
 
 export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
 
