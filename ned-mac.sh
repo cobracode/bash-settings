@@ -8,9 +8,9 @@ echo 'BEGIN ned-mac.sh'
 export PROMPT='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
 
 
-HISTFILE=${ZDOTDIR:-$HOME}/.ned_history
-HISTSIZE=99999
-SAVEHIST=99999
+export HISTFILE=/Users/ned/.ned_history
+export HISTSIZE=99999
+export SAVEHIST=99999
 setopt hist_ignore_all_dups
 
 export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
@@ -67,11 +67,13 @@ function moveLrfFiles {
 # Aliases -------------------------------
 
 alias code='open -b com.microsoft.vscode'
-alias S='source ~/.zprofile'
+alias S='source /Users/ned/ned-mac.sh'
+# alias S='source ~/.zprofile'
 # alias R='code(~/dev/repos/bash-settings)'
 alias R='open -b com.microsoft.vscode ~/dev/repos/bash-settings'
 alias ll='ls -alF'
 alias la='ls -A'
+alias Y='python3 ~/Downloads/yt-dlp'
 
 # Linux
 #alias l='ls -a --classify --human-readable -l --reverse -t'
@@ -94,11 +96,11 @@ alias gl='git log --oneline'
 # Editing -------
 alias ffprobe='ffprobe -hide_banner'
 alias ffmpeg='ffmpeg -hide_banner'
-alias Y='youtube-dl --no-overwrites --no-mtime'
+alias Yold='youtube-dl --no-overwrites --no-mtime'
 alias extractAudio='extractAudioFunc'
 alias moveLrfFiles='moveLrfFiles'
 
 
 echo
-echo "   UPDATED  BASHRC SETTINGS   on $(date +%Y-%m-%d\ %H:%M:%S)"
-echo
+echo "   UPDATED NED-MAC SETTINGS   on $(date +%Y-%m-%d\ %H:%M:%S)"
+echo 'END ned-mac.sh'
