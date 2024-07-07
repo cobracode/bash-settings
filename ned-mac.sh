@@ -32,7 +32,14 @@ function my_traceroute {
 function extractAudioFunc {
 	local mediaFile="$1"
 	local outputFile="$2"
-	ffmpeg -i "${mediaFile}" -vn -acodec copy "${outputFile}"
+	ffmpeg -i "${mediaFile}" -map 0:a -c:a copy "${outputFile}"
+}
+
+# extractVideo <media file> <output file>
+function extractVideoFunc {
+	local mediaFile="$1"
+	local outputFile="$2"
+	ffmpeg -i "${mediaFile}" -map 0:v -c:v copy "${outputFile}"
 }
 
 function moveLrfFiles {
@@ -73,7 +80,9 @@ alias S='source /Users/ned/ned-mac.sh'
 alias R='open -b com.microsoft.vscode ~/dev/repos/bash-settings'
 alias ll='ls -alF'
 alias la='ls -A'
-alias Y='python3 ~/Downloads/yt-dlp'
+alias Y='~/dev/repos/yt-dlp/dist/yt-dlp_macos_arm64 --no-mtime'
+alias python='python3'
+alias spot='pushd ~/dev/repos/onthespot/src; python -m onthespot; popd'
 
 # Linux
 #alias l='ls -a --classify --human-readable -l --reverse -t'
@@ -98,6 +107,7 @@ alias ffprobe='ffprobe -hide_banner'
 alias ffmpeg='ffmpeg -hide_banner'
 alias Yold='youtube-dl --no-overwrites --no-mtime'
 alias extractAudio='extractAudioFunc'
+alias extractVideo='extractVideoFunc'
 alias moveLrfFiles='moveLrfFiles'
 
 
