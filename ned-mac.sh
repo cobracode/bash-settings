@@ -24,12 +24,33 @@ export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBoo
 
 function my_traceroute {
     local host="${1:-google.com}"
-    local maxHops="${2:-5}"
+    local maxHops="${2:-3}"
+    echo 'my_traceroute <maxhops:3> <host:google.com>'
+    echo "\ntraceroute -m ${maxHops} -q 1 -v ${host} 28\n"
     traceroute -m "${maxHops}" -q 1 -v "${host}" 28
 }
 
+# shrinkAudioFunc <media file> <output file>
+function shrinkAudioFunc {
+    if [ "$#" -ne 2 ]; then
+        echo 'shrinkAudioFunc <media file> <output file>'
+        return
+    fi
+
+	local mediaFile="$1"
+	local outputFile="$2"
+	echo "ffmpeg -i ${mediaFile} -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on ${outputFile}"
+	ffmpeg -i "${mediaFile}" -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on "${outputFile}.opus"
+}
+
+
 # extractAudio <media file> <output file>
 function extractAudioFunc {
+    if [ "$#" -ne 2 ]; then
+        echo 'extractAudio <media file> <output file>'
+        return
+    fi
+
 	local mediaFile="$1"
 	local outputFile="$2"
 	ffmpeg -i "${mediaFile}" -map 0:a -c:a copy "${outputFile}"
@@ -37,9 +58,31 @@ function extractAudioFunc {
 
 # extractVideo <media file> <output file>
 function extractVideoFunc {
+    if [ "$#" -ne 2 ]; then
+        echo 'extractVideo <media file> <output file>'
+        return
+    fi
+
 	local mediaFile="$1"
 	local outputFile="$2"
 	ffmpeg -i "${mediaFile}" -map 0:v -c:v copy "${outputFile}"
+}
+
+# convertVideoTrack <media file> <width> <fps> <bitrate> <output file>
+function convertVideoTrack {
+    if [ "$#" -ne 5 ]; then
+        echo 'convertVideoTrack <media file> <width> <fps> <bitrate> <output file>'
+        return
+    fi
+
+    local mediaFile="$1"
+    local width="$2"
+    local fps="$3"
+    local bitrate="$4"
+    local outputFile="$5"
+
+    echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -b:v ${bitrate} -vf scale=-1:${width}, fps=${fps} -preset slow ${outputFile}"
+    ffmpeg -i "${mediaFile}" -map 0:v -c:v libx265 -b:v "${bitrate}" -vf "scale=-1:${width}, fps=${fps}" -preset slow "${outputFile}"
 }
 
 function moveLrfFiles {
@@ -108,7 +151,9 @@ alias ffmpeg='ffmpeg -hide_banner'
 alias Yold='youtube-dl --no-overwrites --no-mtime'
 alias extractAudio='extractAudioFunc'
 alias extractVideo='extractVideoFunc'
+alias shrinkAudio='shrinkAudioFunc'
 alias moveLrfFiles='moveLrfFiles'
+alias convertVideoTrack='convertVideoTrack'
 
 
 echo
