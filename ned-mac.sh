@@ -30,17 +30,16 @@ function my_traceroute {
     traceroute -m "${maxHops}" -q 1 -v "${host}" 28
 }
 
-# shrinkAudioFunc <media file> <output file>
+# shrinkAudioFunc <media file>
 function shrinkAudioFunc {
-    if [ "$#" -ne 2 ]; then
-        echo 'shrinkAudioFunc <media file> <output file>'
+    if [ "$#" -ne 1 ]; then
+        echo 'shrinkAudioFunc <media file>'
         return
     fi
 
 	local mediaFile="$1"
-	local outputFile="$2"
-	echo "ffmpeg -i ${mediaFile} -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on ${outputFile}"
-	ffmpeg -i "${mediaFile}" -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on "${outputFile}.opus"
+	echo "ffmpeg -i ${mediaFile} -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on ${mediaFile}.opus"
+	ffmpeg -i "${mediaFile}" -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on "${mediaFile}.opus"
 }
 
 
@@ -126,6 +125,7 @@ alias la='ls -A'
 alias Y='~/dev/repos/yt-dlp/dist/yt-dlp_macos_arm64 --no-mtime'
 alias python='python3'
 alias spot='pushd ~/dev/repos/onthespot/src; python -m onthespot; popd'
+alias I="open -a 'Google Chrome' --new --args --incognito"
 
 # Linux
 #alias l='ls -a --classify --human-readable -l --reverse -t'
@@ -137,6 +137,7 @@ alias networkUp='watch -n 3 ping -c 1 google.com'
 alias publicIp='curl ifconfig.me'
 alias localIp='ipconfig getifaddr en0'
 alias t='my_traceroute'
+alias c='curl --connect-timeout 5 --verbose astro.com'
 
 # Git --------
 alias ga='git add'
