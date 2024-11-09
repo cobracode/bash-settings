@@ -14,6 +14,7 @@ export SAVEHIST=99999
 setopt hist_ignore_all_dups
 
 export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
+export MARS="/Users/ned/my-stuff/Documents/.system"
 
 
 # Functions -----------------------------
@@ -67,6 +68,24 @@ function extractVideoFunc {
 	ffmpeg -i "${mediaFile}" -map 0:v -c:v copy "${outputFile}"
 }
 
+# convertVideoTrack <media file> <width> <fps> <crf> <output file>
+function convertVideoTrackCrf {
+    if [ "$#" -ne 5 ]; then
+        echo 'convertVideoTrackCrf <media file> <width> <fps> <crf> <output file>'
+        return
+    fi
+
+    local mediaFile="$1"
+    local width="$2"
+    local fps="$3"
+    local crf="$4"
+    local outputFile="$5"
+
+    # TODO: make this configurable: with or without preserving audio
+    echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -crf ${crf} -vf scale=-1:${width}, fps=${fps} ${outputFile}"
+    ffmpeg -i "${mediaFile}" -acodec copy -c:v libx265 -crf ${crf} -vf "scale=-1:${width}, fps=${fps}" "${outputFile}"
+}
+
 # convertVideoTrack <media file> <width> <fps> <bitrate> <output file>
 function convertVideoTrack {
     if [ "$#" -ne 5 ]; then
@@ -80,8 +99,8 @@ function convertVideoTrack {
     local bitrate="$4"
     local outputFile="$5"
 
-    echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -b:v ${bitrate} -vf scale=-1:${width}, fps=${fps} -preset slow ${outputFile}"
-    ffmpeg -i "${mediaFile}" -map 0:v -c:v libx265 -b:v "${bitrate}" -vf "scale=-1:${width}, fps=${fps}" -preset slow "${outputFile}"
+    echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -b:v ${bitrate} -vf scale=-1:${width}, fps=${fps} -preset veryfast ${outputFile}"
+    ffmpeg -i "${mediaFile}" -map 0:v -c:v libx265 -b:v "${bitrate}" -vf "scale=-1:${width}, fps=${fps}" -preset veryfast "${outputFile}"
 }
 
 function moveLrfFiles {
@@ -110,6 +129,100 @@ function moveLrfFiles {
 		fi
 	done
 	echo "Moved [${fileCount}] LRF files from [${sourceDir}] to [${destDir}]"
+}
+
+
+
+
+# ------
+
+function saveLastPlayedFunc {
+	local favDir="${MARS}/favs"
+	mkdir -pv "${favDir}"
+	ln -sv "${LAST_PLAYED}" "${favDir}"
+}
+
+function replayFunc {
+	mpv --mute --loop "${LAST_PLAYED}" &
+}
+
+# vidHereFunc <dir>
+function vidHereNonRepeatingFunc {
+	local dir="$1"
+    local listFile="${MARS}/list.txt"
+	#local vid="$(find ${dir} -type f -size +1k -a \( -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
+	local vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | sort -R | head -n 1)"
+	# local vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | shuf -n 1)"
+
+	while grep -q "${vid}" "${listFile}"; do
+		echo "Video ${vid} already played"
+		#vid="$(find ${dir} -type f -size +1k -a \(-iname '*.mov' -o -iname '*.tmp' -name '_Flash*' -o -iname '*.webp' -o -iname '*.gif' -o -name 'f_*' -o -iname '*.avi' -o -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
+		vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | sort -R | head -n 1)"
+	done
+
+
+	ffprobe "${vid}"
+
+	local last=$(realpath "${vid}")
+	export LAST_PLAYED="${last}"
+
+	mpv --mute --loop "${vid}" &
+	ls -lh "${vid}"
+	echo "\"${vid}\""
+
+	echo "${vid}" >> "${listFile}"
+}
+
+# combineVideoAudio <video file> <audio file> <output file> <volume>(5%) <audio bitrate>(96k)
+function combineVideoAudioFunc {
+    if [ "$#" -lt 3 ]; then
+        echo 'combineVideoAudio <video file> <audio file> <output file> <volume>(5%) <audio bitrate>(96k)'
+        return
+    fi
+
+    local videoFile="$1"
+    local audioFile="$2"
+    local outputFile="$3"
+    local volume="${4:-0.05}"
+    local audioBitrate="${5:-96}"
+
+    ffmpeg -i "${videoFile}" -i "${audioFile}" \
+        -filter_complex "[1:a]volume=${volume},aloop=loop=-1:size=2e+09[song]; [0:a][song]amix=inputs=2:duration=first[mixedAudio]" \
+        -map 0:v -map "[mixedAudio]" \
+        -c:v copy -c:a aac -b:a "${audioBitrate}k" \
+        "${outputFile}"
+}
+
+
+
+function generatePgpKey {
+	# Generate key with RSA 4096 bits and no expiry for Proton Mail
+	gpg --expert \
+		--full-generate-key \
+		--keyid-format long \
+		--with-colons \
+		--command-fd 0 << EOF
+9
+1
+4096
+0
+y
+EOF
+	# Export public key to import into Proton Mail
+	gpg --armor --export
+}
+
+# vidHereFunc
+function vidHereFunc {
+	local dir="${MARS}/favs"
+	#local vid="$(find ${dir} -type f -size +1k -a \( -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
+	local vid="$(find ${dir} -type l | sort -R | head -n 1)"
+
+	ffprobe "${vid}"
+
+	mpv --mute --loop "${vid}" &
+	ls -lh "${vid}"
+	echo "\"${vid}\""
 }
 
 
@@ -155,7 +268,13 @@ alias extractVideo='extractVideoFunc'
 alias shrinkAudio='shrinkAudioFunc'
 alias moveLrfFiles='moveLrfFiles'
 alias convertVideoTrack='convertVideoTrack'
+alias convertVideoTrackCrf='convertVideoTrackCrf'
+alias combineVideoAudio='combineVideoAudioFunc'
 
+alias vidHere='vidHereNonRepeatingFunc'
+alias fav='vidHereFunc'
+alias replay='replayFunc'
+alias saveLastPlayed='saveLastPlayedFunc'
 
 echo
 echo "   UPDATED NED-MAC SETTINGS   on $(date +%Y-%m-%d\ %H:%M:%S)"
