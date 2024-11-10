@@ -68,6 +68,19 @@ function extractVideoFunc {
 	ffmpeg -i "${mediaFile}" -map 0:v -c:v copy "${outputFile}"
 }
 
+function imageSongFunc {
+    if [ "$#" -ne 3 ]; then
+        echo 'imageSongFunc <image file> <song file> <output file>'
+        return
+    fi
+
+    local imageFile="$1"
+    local songFile="$2"
+    local outputFile="$3"
+
+    ffmpeg -loop 1 -framerate 1 -i ${imageFile} -i ${songFile} -c:v libx265 -c:a copy -shortest -pix_fmt yuv420p ${outputFile}
+}
+
 # convertVideoTrack <media file> <width> <fps> <crf> <output file>
 function convertVideoTrackCrf {
     if [ "$#" -ne 5 ]; then
@@ -266,6 +279,7 @@ alias Yold='youtube-dl --no-overwrites --no-mtime'
 alias extractAudio='extractAudioFunc'
 alias extractVideo='extractVideoFunc'
 alias shrinkAudio='shrinkAudioFunc'
+alias imageSong='imageSongFunc'
 alias moveLrfFiles='moveLrfFiles'
 alias convertVideoTrack='convertVideoTrack'
 alias convertVideoTrackCrf='convertVideoTrackCrf'
