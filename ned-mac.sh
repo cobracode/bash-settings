@@ -2,13 +2,20 @@ echo 'BEGIN ned-mac.sh'
 
 # Set variables -------------------------
 
+# Homebrew variables
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
 # original prompt:
 # PROMPT='%n@%m %1~ %#'
 # export PROMPT='%F{green}%n%f@%F{blue}%m%f:%F{cyan}%~%f$ '
 export PROMPT='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
 
+# Update PATH
+export PATH="$PATH:/Users/nedshares/dev/platform-tools"
 
-export HISTFILE=/Users/ned/.ned_history
+# Unused for now 20250426
+#export HISTFILE=/Users/ned/.ned_history
+
 export HISTSIZE=99999
 export SAVEHIST=99999
 setopt hist_ignore_all_dups
@@ -241,11 +248,15 @@ function vidHereFunc {
 
 # Aliases -------------------------------
 
-alias code='open -b com.microsoft.vscode'
-alias S='source /Users/ned/ned-mac.sh'
+# now taken care of upon Cursor installation
+#alias code='open -b com.microsoft.vscode'
+
+alias S='source ~/ned-mac.sh'
 # alias S='source ~/.zprofile'
+
 # alias R='code(~/dev/repos/bash-settings)'
 alias R='open -b com.microsoft.vscode ~/dev/repos/bash-settings'
+
 alias ll='ls -alF'
 alias la='ls -A'
 alias Y='~/dev/repos/yt-dlp/dist/yt-dlp_macos_arm64 --no-mtime'
