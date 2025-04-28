@@ -11,7 +11,9 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 export PROMPT='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
 
 # Update PATH
-export PATH="$PATH:/Users/nedshares/dev/platform-tools"
+export PATH="${PATH}:${HOME}/dev/platform-tools:${HOME}/Library/Python/3.9/bin"
+
+
 
 # Unused for now 20250426
 #export HISTFILE=/Users/ned/.ned_history
@@ -251,11 +253,12 @@ function vidHereFunc {
 # now taken care of upon Cursor installation
 #alias code='open -b com.microsoft.vscode'
 
-alias S='source ~/ned-mac.sh'
+alias S="source ${HOME}/ned-mac.sh"
 # alias S='source ~/.zprofile'
 
 # alias R='code(~/dev/repos/bash-settings)'
-alias R='open -b com.microsoft.vscode ~/dev/repos/bash-settings'
+# alias R='open -b com.microsoft.vscode ~/dev/repos/bash-settings'
+alias R='code ~/dev/repos/bash-settings'
 
 alias ll='ls -alF'
 alias la='ls -A'
