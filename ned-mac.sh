@@ -262,7 +262,8 @@ alias R='code ~/dev/repos/bash-settings'
 
 alias ll='ls -alF'
 alias la='ls -A'
-alias Y='~/dev/repos/yt-dlp/dist/yt-dlp_macos_arm64 --no-mtime'
+#alias Y='~/dev/repos/yt-dlp/dist/yt-dlp_macos_arm64 --no-mtime'
+alias Y='yt-dlp --no-mtime'
 alias python='python3'
 alias spot='pushd ~/dev/repos/onthespot/src; python -m onthespot; popd'
 alias I="open -a 'Google Chrome' --new --args --incognito"
@@ -278,6 +279,7 @@ alias publicIp='curl ifconfig.me'
 alias localIp='ipconfig getifaddr en0'
 alias t='my_traceroute'
 alias c='curl --connect-timeout 5 --verbose astro.com'
+alias brewSpace='du -sch $(brew --cellar)/*/* | sed "s|$(brew --cellar)/\([^/]*\)/.*|\1|" | sort -k1h'
 
 # Git --------
 alias ga='git add'
