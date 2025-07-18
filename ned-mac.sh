@@ -25,6 +25,9 @@ setopt hist_ignore_all_dups
 export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
 export MARS="/Users/ned/my-stuff/Documents/.system"
 
+export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
+
+
 
 # Functions -----------------------------
 # function code {
@@ -90,22 +93,27 @@ function imageSongFunc {
     ffmpeg -loop 1 -framerate 1 -i ${imageFile} -i ${songFile} -c:v libx265 -c:a copy -shortest -pix_fmt yuv420p ${outputFile}
 }
 
-# convertVideoTrack <media file> <width> <fps> <crf> <output file>
+# convertVideoTrack <media file> <height> <fps> <crf> <output file>
 function convertVideoTrackCrf {
-    if [ "$#" -ne 5 ]; then
-        echo 'convertVideoTrackCrf <media file> <width> <fps> <crf> <output file>'
+    if [ "$#" -lt 5 ]; then
+        echo 'convertVideoTrackCrf <media file> <height> <fps> <crf> <output file> <duration>'
         return
     fi
 
     local mediaFile="$1"
-    local width="$2"
+    local height="$2"
     local fps="$3"
     local crf="$4"
     local outputFile="$5"
+    local duration="$6"
 
-    # TODO: make this configurable: with or without preserving audio
-    echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -crf ${crf} -vf scale=-1:${width}, fps=${fps} ${outputFile}"
-    ffmpeg -i "${mediaFile}" -acodec copy -c:v libx265 -crf ${crf} -vf "scale=-1:${width}, fps=${fps}" "${outputFile}"
+    if [ -n "${duration}" ]; then
+        echo "ffmpeg -i ${mediaFile} -to ${duration} -map 0:v -c:v libx265 -crf ${crf} -vf scale=-2:${height}, fps=${fps} ${outputFile}"
+        ffmpeg -i "${mediaFile}" -to "${duration}" -acodec copy -c:v libx265 -crf ${crf} -vf "scale=-2:${height}, fps=${fps}" "${outputFile}"
+    else
+        echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -crf ${crf} -vf scale=-2:${height}, fps=${fps} ${outputFile}"
+        ffmpeg -i "${mediaFile}" -acodec copy -c:v libx265 -crf ${crf} -vf "scale=-2:${height}, fps=${fps}" "${outputFile}"
+    fi
 }
 
 # convertVideoTrack <media file> <width> <fps> <bitrate> <output file>
@@ -121,8 +129,8 @@ function convertVideoTrack {
     local bitrate="$4"
     local outputFile="$5"
 
-    echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -b:v ${bitrate} -vf scale=-1:${width}, fps=${fps} -preset veryfast ${outputFile}"
-    ffmpeg -i "${mediaFile}" -map 0:v -c:v libx265 -b:v "${bitrate}" -vf "scale=-1:${width}, fps=${fps}" -preset veryfast "${outputFile}"
+    echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -b:v ${bitrate} -vf scale=-2:${width}, fps=${fps} -preset veryfast ${outputFile}"
+    ffmpeg -i "${mediaFile}" -map 0:v -c:v libx265 -b:v "${bitrate}" -vf "scale=-2:${width}, fps=${fps}" -preset veryfast "${outputFile}"
 }
 
 function moveLrfFiles {
@@ -248,7 +256,25 @@ function vidHereFunc {
 }
 
 
+
+#  AWS
+
+function awsIdentityFunc {
+    #local audioBitrate="${5:-96}"
+    local profile="${1:-default}"
+    echo "profile: $profile"
+    aws sts get-caller-identity --profile "${profile}"
+}
+
+
 # Aliases -------------------------------
+
+# AWS
+# alias aid='aws sts get-caller-identity'
+alias aid='awsIdentityFunc'
+
+
+
 
 # now taken care of upon Cursor installation
 #alias code='open -b com.microsoft.vscode'
@@ -280,6 +306,7 @@ alias localIp='ipconfig getifaddr en0'
 alias t='my_traceroute'
 alias c='curl --connect-timeout 5 --verbose astro.com'
 alias brewSpace='du -sch $(brew --cellar)/*/* | sed "s|$(brew --cellar)/\([^/]*\)/.*|\1|" | sort -k1h'
+alias crypt='python dev/cursor/crypt/main.py'
 
 # Git --------
 alias ga='git add'
