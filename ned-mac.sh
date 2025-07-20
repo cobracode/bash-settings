@@ -306,7 +306,7 @@ alias localIp='ipconfig getifaddr en0'
 alias t='my_traceroute'
 alias c='curl --connect-timeout 5 --verbose astro.com'
 alias brewSpace='du -sch $(brew --cellar)/*/* | sed "s|$(brew --cellar)/\([^/]*\)/.*|\1|" | sort -k1h'
-alias crypt='python dev/cursor/crypt/main.py'
+alias crypt='python dev/cursor/crypt/main.py &'
 
 # Git --------
 alias ga='git add'
