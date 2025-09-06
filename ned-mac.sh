@@ -175,6 +175,13 @@ function moveLrfFiles {
 	echo "Moved [${fileCount}] LRF files from [${sourceDir}] to [${destDir}]"
 }
 
+function previewRandomFileFunc {
+    local dir="${1:-$(pwd)}"
+
+    local file=$(find "${dir}" | shuf -n 1)
+    qlmanage -p "${file}"
+}
+
 
 
 
@@ -321,6 +328,7 @@ alias c='curl --connect-timeout 5 --verbose astro.com'
 alias brewSpace='du -sch $(brew --cellar)/*/* | sed "s|$(brew --cellar)/\([^/]*\)/.*|\1|" | sort -k1h'
 alias crypt='python dev/cursor/crypt/main.py &'
 alias priv='open -a "Google Chrome" --args --incognito --enable-logging --v=1'
+alias previewRandomFile='previewRandomFileFunc'
 
 # Git --------
 alias ga='git add'
