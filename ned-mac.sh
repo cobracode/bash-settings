@@ -93,6 +93,20 @@ function imageSongFunc {
     ffmpeg -loop 1 -framerate 1 -i ${imageFile} -i ${songFile} -c:v libx265 -c:a copy -shortest -pix_fmt yuv420p ${outputFile}
 }
 
+function cutVideoFunc {
+    if [ "$#" -ne 4 ]; then
+        echo 'cutVideoFunc <input file> <start hh:mm:ss> <end hh:mm:ss> <output file>'
+        return
+    fi
+
+    local inputFile="$1"
+    local start="$2"
+    local end="$3"
+    local outputFile="$4"
+
+    ffmpeg -i "${inputFile}" -ss "${start}" -to "${end}" -c copy "${outputFile}"
+}
+
 # convertVideoTrack <media file> <height> <fps> <crf> <output file>
 function convertVideoTrackCrf {
     if [ "$#" -lt 5 ]; then
@@ -292,7 +306,6 @@ alias la='ls -A'
 alias Y='yt-dlp --no-mtime'
 alias python='python3'
 alias spot='pushd ~/dev/repos/onthespot/src; python -m onthespot; popd'
-alias I="open -a 'Google Chrome' --new --args --incognito"
 
 # Linux
 #alias l='ls -a --classify --human-readable -l --reverse -t'
@@ -307,6 +320,7 @@ alias t='my_traceroute'
 alias c='curl --connect-timeout 5 --verbose astro.com'
 alias brewSpace='du -sch $(brew --cellar)/*/* | sed "s|$(brew --cellar)/\([^/]*\)/.*|\1|" | sort -k1h'
 alias crypt='python dev/cursor/crypt/main.py &'
+alias priv='open -a "Google Chrome" --args --incognito --enable-logging --v=1'
 
 # Git --------
 alias ga='git add'
@@ -324,6 +338,7 @@ alias extractVideo='extractVideoFunc'
 alias shrinkAudio='shrinkAudioFunc'
 alias imageSong='imageSongFunc'
 alias moveLrfFiles='moveLrfFiles'
+alias cutVideo='cutVideoFunc'
 alias convertVideoTrack='convertVideoTrack'
 alias convertVideoTrackCrf='convertVideoTrackCrf'
 alias combineVideoAudio='combineVideoAudioFunc'
