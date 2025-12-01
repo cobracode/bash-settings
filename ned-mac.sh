@@ -29,7 +29,7 @@ export HISTSIZE=99999
 export SAVEHIST=99999
 setopt hist_ignore_all_dups
 
-export EBOOKS="${USER_PATH}/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
+export EBOOKS="${HOME}/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
 
 # export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
 
