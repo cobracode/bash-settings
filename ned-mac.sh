@@ -2,6 +2,13 @@ echo 'BEGIN ned-mac.sh'
 
 # Set variables -------------------------
 
+export DEV_PATH="${HOME}/dev"
+export BASH_SETTINGS_PATH="${DEV_PATH}/repos/bash-settings"
+export NED_MAC_PATH="${BASH_SETTINGS_PATH}/ned-mac.sh"
+
+export MARS='UNDEFINED'
+
+
 # Homebrew variables
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
@@ -11,7 +18,7 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 export PROMPT='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
 
 # Update PATH
-export PATH="${PATH}:${HOME}/dev/platform-tools:${HOME}/Library/Python/3.9/bin"
+#export PATH="${PATH}:${HOME}/dev/platform-tools:${HOME}/Library/Python/3.9/bin"
 
 
 
@@ -22,10 +29,9 @@ export HISTSIZE=99999
 export SAVEHIST=99999
 setopt hist_ignore_all_dups
 
-export EBOOKS="/Users/ned/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
-export MARS="/Users/ned/my-stuff/Documents/.system"
+export EBOOKS="${USER_PATH}/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
 
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
+# export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
 
 
 
@@ -300,12 +306,12 @@ alias aid='awsIdentityFunc'
 # now taken care of upon Cursor installation
 #alias code='open -b com.microsoft.vscode'
 
-alias S="source ${HOME}/ned-mac.sh"
+alias S="source ${NED_MAC_PATH}"
 # alias S='source ~/.zprofile'
 
 # alias R='code(~/dev/repos/bash-settings)'
 # alias R='open -b com.microsoft.vscode ~/dev/repos/bash-settings'
-alias R='code ~/dev/repos/bash-settings'
+alias R="code ${BASH_SETTINGS_PATH}"
 
 alias ll='ls -alF'
 alias la='ls -A'
@@ -358,4 +364,4 @@ alias saveLastPlayed='saveLastPlayedFunc'
 
 echo
 echo "   UPDATED NED-MAC SETTINGS   on $(date +%Y-%m-%d\ %H:%M:%S)"
-echo 'END ned-mac.sh'
+echo "END ${NED_MAC_PATH}"
