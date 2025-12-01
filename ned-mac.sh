@@ -1,6 +1,6 @@
 echo 'BEGIN ned-mac.sh'
 
-# Set variables --------------------------
+# Set variables ---------------------------
 
 export DEV_PATH="${HOME}/dev"
 export BASH_SETTINGS_PATH="${DEV_PATH}/repos/bash-settings"
