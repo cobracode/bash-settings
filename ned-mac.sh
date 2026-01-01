@@ -3,7 +3,8 @@ echo 'BEGIN ned-mac.sh'
 # Set variables ---------------------------
 
 export DEV_PATH="${HOME}/dev"
-export BASH_SETTINGS_PATH="${DEV_PATH}/repos/bash-settings"
+export REPO_PATH="${DEV_PATH}/repos"
+export BASH_SETTINGS_PATH="${REPO_PATH}/bash-settings"
 export NED_MAC_PATH="${BASH_SETTINGS_PATH}/ned-mac.sh"
 
 export MARS='UNDEFINED'
@@ -19,7 +20,7 @@ export PROMPT='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
 
 # Update PATH
 #export PATH="${PATH}:${HOME}/dev/platform-tools:${HOME}/Library/Python/3.9/bin"
-
+export PATH="${PATH}:${HOME}/dev/bin/ffmpeg"
 
 
 # Unused for now 20250426
@@ -56,9 +57,9 @@ function shrinkAudioFunc {
         return
     fi
 
-	local mediaFile="$1"
-	echo "ffmpeg -i ${mediaFile} -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on ${mediaFile}.opus"
-	ffmpeg -i "${mediaFile}" -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on "${mediaFile}.opus"
+    local mediaFile="$1"
+    echo "ffmpeg -i ${mediaFile} -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on ${mediaFile}.opus"
+    ffmpeg -i "${mediaFile}" -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on "${mediaFile}.opus"
 }
 
 
@@ -69,9 +70,9 @@ function extractAudioFunc {
         return
     fi
 
-	local mediaFile="$1"
-	local outputFile="$2"
-	ffmpeg -i "${mediaFile}" -map 0:a -c:a copy "${outputFile}"
+    local mediaFile="$1"
+    local outputFile="$2"
+    ffmpeg -i "${mediaFile}" -map 0:a -c:a copy "${outputFile}"
 }
 
 # extractVideo <media file> <output file>
@@ -81,9 +82,9 @@ function extractVideoFunc {
         return
     fi
 
-	local mediaFile="$1"
-	local outputFile="$2"
-	ffmpeg -i "${mediaFile}" -map 0:v -c:v copy "${outputFile}"
+    local mediaFile="$1"
+    local outputFile="$2"
+    ffmpeg -i "${mediaFile}" -map 0:v -c:v copy "${outputFile}"
 }
 
 function imageSongFunc {
@@ -154,31 +155,31 @@ function convertVideoTrack {
 }
 
 function moveLrfFiles {
-	local sourceDir="${1:-$(pwd)}"
-	local destDir="lrf"
-	local filePattern="*.LRF.mp4"
-	local fileCount=0
+    local sourceDir="${1:-$(pwd)}"
+    local destDir="lrf"
+    local filePattern="*.LRF.mp4"
+    local fileCount=0
 
     # If no files, exit
     local numLrfFiles=$(find . -type f -name "${filePattern}" | wc -c)
 
-	echo "Number of .txt files: ${numLrfFiles}"
+    echo "Number of .txt files: ${numLrfFiles}"
 
     if [ "${numLrfFiles}" -eq 0 ]; then
         echo "No .LRF files found in [${sourceDir}]"
         return
     fi
 
-	local file
+    local file
 
-	for file in "${sourceDir}/${filePattern}"; do
-		if [ -f "${file}" ]; then
-			#mv -v "${file}" "${destDir}"
-			echo "moving file ${file}"
-			fileCount=$((fileCount+1))
-		fi
-	done
-	echo "Moved [${fileCount}] LRF files from [${sourceDir}] to [${destDir}]"
+    for file in "${sourceDir}/${filePattern}"; do
+        if [ -f "${file}" ]; then
+            #mv -v "${file}" "${destDir}"
+            echo "moving file ${file}"
+            fileCount=$((fileCount+1))
+        fi
+    done
+    echo "Moved [${fileCount}] LRF files from [${sourceDir}] to [${destDir}]"
 }
 
 function previewRandomFileFunc {
@@ -194,40 +195,40 @@ function previewRandomFileFunc {
 # ------
 
 function saveLastPlayedFunc {
-	local favDir="${MARS}/favs"
-	mkdir -pv "${favDir}"
-	ln -sv "${LAST_PLAYED}" "${favDir}"
+    local favDir="${MARS}/favs"
+    mkdir -pv "${favDir}"
+    ln -sv "${LAST_PLAYED}" "${favDir}"
 }
 
 function replayFunc {
-	mpv --mute --loop "${LAST_PLAYED}" &
+    mpv --mute --loop "${LAST_PLAYED}" &
 }
 
 # vidHereFunc <dir>
 function vidHereNonRepeatingFunc {
-	local dir="$1"
+    local dir="$1"
     local listFile="${MARS}/list.txt"
-	#local vid="$(find ${dir} -type f -size +1k -a \( -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
-	local vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | sort -R | head -n 1)"
-	# local vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | shuf -n 1)"
+    #local vid="$(find ${dir} -type f -size +1k -a \( -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
+    local vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | sort -R | head -n 1)"
+    # local vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | shuf -n 1)"
 
-	while grep -q "${vid}" "${listFile}"; do
-		echo "Video ${vid} already played"
-		#vid="$(find ${dir} -type f -size +1k -a \(-iname '*.mov' -o -iname '*.tmp' -name '_Flash*' -o -iname '*.webp' -o -iname '*.gif' -o -name 'f_*' -o -iname '*.avi' -o -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
-		vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | sort -R | head -n 1)"
-	done
+    while grep -q "${vid}" "${listFile}"; do
+        echo "Video ${vid} already played"
+        #vid="$(find ${dir} -type f -size +1k -a \(-iname '*.mov' -o -iname '*.tmp' -name '_Flash*' -o -iname '*.webp' -o -iname '*.gif' -o -name 'f_*' -o -iname '*.avi' -o -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
+        vid="$(find ${dir} -not -iname '*.jpg' -type f -size +100k | sort -R | head -n 1)"
+    done
 
 
-	ffprobe "${vid}"
+    ffprobe "${vid}"
 
-	local last=$(realpath "${vid}")
-	export LAST_PLAYED="${last}"
+    local last=$(realpath "${vid}")
+    export LAST_PLAYED="${last}"
 
-	mpv --mute --loop "${vid}" &
-	ls -lh "${vid}"
-	echo "\"${vid}\""
+    mpv --mute --loop "${vid}" &
+    ls -lh "${vid}"
+    echo "\"${vid}\""
 
-	echo "${vid}" >> "${listFile}"
+    echo "${vid}" >> "${listFile}"
 }
 
 # combineVideoAudio <video file> <audio file> <output file> <volume>(5%) <audio bitrate>(96k)
@@ -253,33 +254,33 @@ function combineVideoAudioFunc {
 
 
 function generatePgpKey {
-	# Generate key with RSA 4096 bits and no expiry for Proton Mail
-	gpg --expert \
-		--full-generate-key \
-		--keyid-format long \
-		--with-colons \
-		--command-fd 0 << EOF
+    # Generate key with RSA 4096 bits and no expiry for Proton Mail
+    gpg --expert \
+        --full-generate-key \
+        --keyid-format long \
+        --with-colons \
+        --command-fd 0 << EOF
 9
 1
 4096
 0
 y
 EOF
-	# Export public key to import into Proton Mail
-	gpg --armor --export
+    # Export public key to import into Proton Mail
+    gpg --armor --export
 }
 
 # vidHereFunc
 function vidHereFunc {
-	local dir="${MARS}/favs"
-	#local vid="$(find ${dir} -type f -size +1k -a \( -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
-	local vid="$(find ${dir} -type l | sort -R | head -n 1)"
+    local dir="${MARS}/favs"
+    #local vid="$(find ${dir} -type f -size +1k -a \( -name 'Flash*' -o -iname '*.mpg' -o -iname '*.mpeg' -o -iname '*.mp4' -o -iname '*.wmv' -o -iname '*.flv' -o -name 'com.google.chrome*' \) | shuf -n 1)"
+    local vid="$(find ${dir} -type l | sort -R | head -n 1)"
 
-	ffprobe "${vid}"
+    ffprobe "${vid}"
 
-	mpv --mute --loop "${vid}" &
-	ls -lh "${vid}"
-	echo "\"${vid}\""
+    mpv --mute --loop "${vid}" &
+    ls -lh "${vid}"
+    echo "\"${vid}\""
 }
 
 
@@ -332,12 +333,17 @@ alias localIp='ipconfig getifaddr en0'
 alias t='my_traceroute'
 alias c='curl --connect-timeout 5 --verbose astro.com'
 alias brewSpace='du -sch $(brew --cellar)/*/* | sed "s|$(brew --cellar)/\([^/]*\)/.*|\1|" | sort -k1h'
-alias crypt='python dev/cursor/crypt/main.py &'
+alias crypt="pushd ${REPO_PATH}/crypt; source venv/bin/activate; python main.py & deactivate; popd"
 alias priv='open -a "Google Chrome" --args --incognito --enable-logging --v=1'
 alias previewRandomFile='previewRandomFileFunc'
+alias flushDns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
+alias openHosts='sudo mv -v /etc/hosts /etc/hosts-open'
+alias closeHosts='sudo mv -v /etc/hosts-open /etc/hosts'
 
 # Git --------
 alias ga='git add'
+alias gb='git branch -vvv'
+alias gba='git branch --all -vvv'
 alias gd='git diff'
 alias gs='git status'
 alias gf='git fetch'
@@ -356,6 +362,9 @@ alias cutVideo='cutVideoFunc'
 alias convertVideoTrack='convertVideoTrack'
 alias convertVideoTrackCrf='convertVideoTrackCrf'
 alias combineVideoAudio='combineVideoAudioFunc'
+
+## ffmpeg ------
+alias listCaptureDevices='ffmpeg -f avfoundation -list_devices true -i ""'
 
 alias vidHere='vidHereNonRepeatingFunc'
 alias fav='vidHereFunc'
