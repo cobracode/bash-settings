@@ -114,7 +114,6 @@ function cutVideoFunc {
     ffmpeg -i "${inputFile}" -ss "${start}" -to "${end}" -c copy "${outputFile}"
 }
 
-# convertVideoTrack <media file> <height> <fps> <crf> <output file>
 function convertVideoTrackCrf {
     if [ "$#" -lt 5 ]; then
         echo 'convertVideoTrackCrf <media file> <height> <fps> <crf> <output file> <duration>'
@@ -137,7 +136,6 @@ function convertVideoTrackCrf {
     fi
 }
 
-# convertVideoTrack <media file> <width> <fps> <bitrate> <output file>
 function convertVideoTrack {
     if [ "$#" -ne 5 ]; then
         echo 'convertVideoTrack <media file> <width> <fps> <bitrate> <output file>'
@@ -152,6 +150,213 @@ function convertVideoTrack {
 
     echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -b:v ${bitrate} -vf scale=-2:${width}, fps=${fps} -preset veryfast ${outputFile}"
     ffmpeg -i "${mediaFile}" -map 0:v -c:v libx265 -b:v "${bitrate}" -vf "scale=-2:${width}, fps=${fps}" -preset veryfast "${outputFile}"
+}
+
+
+# Run ffmpeg -h encoder=hevc_videotoolbox to list options specific to hevc_videotoolbox.
+# Use -b:v to control quality in terms of target bitrate.
+# Use -q:v for quality control between 1 and 100 (higher is better).
+# -crf is only for libx264, libx265, libvpx, and libvpx-vp9. It will be ignored by other encoders. It will also ignore -preset.
+# hevc_videotoolbox isn't as good as libx265, but it is fast
+
+# convertVideoTrackFunc - Universal video conversion with named parameters
+# Required: --mediaFile, --outputFile
+# Optional: --height, --width, --fps, --crf, --bitrate, --duration, --preset, --copyAudio, --vcodec
+# Usage: convertVideoTrackFunc --mediaFile=input.mp4 --outputFile=output.mp4 --height=720 --fps=30 --crf=23
+function convertVideoFunc {
+    local mediaFile=""
+    local outputFile=""
+    local height=720
+    local width=""
+    local fps=24
+    local crf=40
+    local bitrate=""
+    local duration=
+    local preset='medium'
+    local copyAudio=false
+    local useVideoToolboxEncoder=false
+    local videoToolboxQuality=50
+    local videoCodec='libx265'
+    local previewOnly=false
+
+    # Parse named parameters
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --mediaFile=*)
+                mediaFile="${1#*=}"
+                shift
+                ;;
+            --mediaFile)
+                mediaFile="$2"
+                shift 2
+                ;;
+            --preview)
+                previewOnly=true
+                shift
+                ;;
+            --outputFile=*)
+                outputFile="${1#*=}"
+                shift
+                ;;
+            --outputFile)
+                outputFile="$2"
+                shift 2
+                ;;
+            --height=*)
+                height="${1#*=}"
+                shift
+                ;;
+            --height)
+                height="$2"
+                shift 2
+                ;;
+            --width=*)
+                width="${1#*=}"
+                shift
+                ;;
+            --width)
+                width="$2"
+                shift 2
+                ;;
+            --fps=*)
+                fps="${1#*=}"
+                shift
+                ;;
+            --fps)
+                fps="$2"
+                shift 2
+                ;;
+            --crf=*)
+                crf="${1#*=}"
+                shift
+                ;;
+            --crf)
+                crf="$2"
+                shift 2
+                ;;
+            --bitrate=*)
+                bitrate="${1#*=}"
+                shift
+                ;;
+            --bitrate)
+                bitrate="$2"
+                shift 2
+                ;;
+            --duration=*)
+                duration="${1#*=}"
+                shift
+                ;;
+            --duration)
+                duration="$2"
+                shift 2
+                ;;
+            --preset=*)
+                preset="${1#*=}"
+                shift
+                ;;
+            --preset)
+                preset="$2"
+                shift 2
+                ;;
+            --copyAudio)
+                copyAudio=true
+                shift
+                ;;
+            --useVideoToolbox)
+                useVideoToolboxEncoder=true
+                videoCodec='hevc_videotoolbox'
+                shift
+                ;;
+            --useVideoToolbox,*)
+                useVideoToolboxEncoder=true
+                videoCodec='hevc_videotoolbox'
+                videoToolboxQuality="${1#*,}"
+                shift
+                ;;
+            *)
+                echo "Unknown parameter: $1"
+                echo "Usage: convertVideoTrackOptions --mediaFile=<file> --outputFile=<file> [options]"
+                echo "Options: --height, --width, --fps, --crf, --bitrate, --duration, --preset, --copyAudio, --useVideoToolbx, --preview"
+                return 1
+                ;;
+        esac
+    done
+
+    # Validate required parameters
+    if [ -z "${mediaFile}" ] || [ -z "${outputFile}" ]; then
+        echo "Error: --mediaFile and --outputFile are required"
+        echo "Usage: convertVideoTrackOptions --mediaFile=<file> --outputFile=<file> [options]"
+        return 1
+    fi
+
+    # Build ffmpeg command
+    local cmd="ffmpeg -i \"${mediaFile}\""
+
+    # Add duration if specified
+    if [ -n "${duration}" ]; then
+        cmd="${cmd} -to \"${duration}\""
+    fi
+
+    # Add audio handling
+    if [ "${copyAudio}" = "true" ]; then
+        cmd="${cmd} -acodec copy"
+    else
+        # Add video mapping
+        cmd="${cmd} -map 0:v"
+    fi
+
+    # Add video codec
+    cmd="${cmd} -c:v ${videoCodec}"
+
+    # VideoToolbox encoder has its own quality mechanism
+    if [ "${useVideoToolboxEncoder}" = true ]; then
+        cmd="${cmd} -q:v ${videoToolboxQuality}"
+    # Add quality control (CRF takes precedence over bitrate)
+    elif [ -n "${crf}" ]; then
+        cmd="${cmd} -crf ${crf}"
+    elif [ -n "${bitrate}" ]; then
+        cmd="${cmd} -b:v \"${bitrate}\""
+    fi
+
+    # Build video filter
+    local vfParts=""
+    
+    # Add scaling (width takes precedence over height if both provided)
+    if [ -n "${width}" ]; then
+        vfParts="scale=${width}:-2"
+    elif [ -n "${height}" ]; then
+        vfParts="scale=-2:${height}"
+    fi
+
+    # Add fps if specified
+    if [ -n "${fps}" ]; then
+        if [ -n "${vfParts}" ]; then
+            vfParts="${vfParts}, fps=${fps}"
+        else
+            vfParts="fps=${fps}"
+        fi
+    fi
+
+    # Add video filter if any parts exist
+    if [ -n "${vfParts}" ]; then
+        cmd="${cmd} -vf \"${vfParts}\""
+    fi
+
+    # Add preset
+    if [ -n "${preset}" ]; then
+        cmd="${cmd} -preset ${preset}"
+    fi
+
+    # Add output file
+    cmd="${cmd} \"${outputFile}\""
+
+    # Print and execute command
+    echo "${cmd}"
+
+    if [ "${previewOnly}" = false ]; then
+        #echo 'RUNNING COMMAND!'
+        eval "${cmd}"
+    fi
 }
 
 function moveLrfFiles {
@@ -363,6 +568,7 @@ alias moveLrfFiles='moveLrfFiles'
 alias cutVideo='cutVideoFunc'
 alias convertVideoTrack='convertVideoTrack'
 alias convertVideoTrackCrf='convertVideoTrackCrf'
+alias convertVideo='convertVideoFunc'
 alias combineVideoAudio='combineVideoAudioFunc'
 
 ## ffmpeg ------
