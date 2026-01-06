@@ -339,6 +339,7 @@ alias previewRandomFile='previewRandomFileFunc'
 alias flushDns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
 alias openHosts='sudo mv -v /etc/hosts /etc/hosts-open'
 alias closeHosts='sudo mv -v /etc/hosts-open /etc/hosts'
+alias grepF='grep -F'
 
 # Git --------
 alias ga='git add'
@@ -346,8 +347,9 @@ alias gb='git branch -vvv'
 alias gba='git branch --all -vvv'
 alias gd='git diff'
 alias gs='git status'
-alias gf='git fetch'
-alias gl='git log --oneline'
+alias gf='git fetch --prune'
+alias gl='git log --oneline --graph'
+alias gsp='git stash save && git pull && git stash pop'
 
 # Editing -------
 alias ffprobe='ffprobe -hide_banner'
