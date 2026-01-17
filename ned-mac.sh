@@ -6,6 +6,7 @@ export DEV_PATH="${HOME}/dev"
 export REPO_PATH="${DEV_PATH}/repos"
 export BASH_SETTINGS_PATH="${REPO_PATH}/bash-settings"
 export NED_MAC_PATH="${BASH_SETTINGS_PATH}/ned-mac.sh"
+export HOSTS_PATH='/etc/hosts'
 
 export MARS='UNDEFINED'
 
@@ -42,12 +43,29 @@ export EBOOKS="${HOME}/Library/Containers/com.amazon.Lassen/Data/Library/eBooks"
 #     open -b com.microsoft.vscode ${file}
 # }
 
+function printCommandHeader {
+    local cmd="${1:-'NO COMMAND SPECIFIED'}"
+
+    echo '---------------'
+    echo 'Running command'
+    echo '---------------'
+    echo
+    echo "${cmd}"
+    echo
+    echo '---------------'
+}
+
+
+
 function my_traceroute {
     local host="${1:-google.com}"
     local maxHops="${2:-3}"
     echo 'my_traceroute <maxhops:3> <host:google.com>'
-    echo "\ntraceroute -m ${maxHops} -q 1 -v ${host} 28\n"
-    traceroute -m "${maxHops}" -q 1 -v "${host}" 28
+
+    local cmd="traceroute -m ${maxHops} -q 1 -v ${host} 28"
+
+    printCommandHeader "${cmd}"
+    eval "${cmd}"
 }
 
 # shrinkAudioFunc <media file>
@@ -58,8 +76,10 @@ function shrinkAudioFunc {
     fi
 
     local mediaFile="$1"
-    echo "ffmpeg -i ${mediaFile} -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on ${mediaFile}.opus"
-    ffmpeg -i "${mediaFile}" -ac 1 -c:a libopus -b:a 6k -ar 8000 -vbr on "${mediaFile}.opus"
+    local cmd="ffmpeg -i ${mediaFile} -ac 1 -c:a libopus -b:a 6k -bandwidth narrowband -application voip -vbr on -frame_duration 60 ${mediaFile}-shrunk.opus"
+
+    printCommandHeader "${cmd}"
+    eval "${cmd}"
 }
 
 
@@ -72,7 +92,11 @@ function extractAudioFunc {
 
     local mediaFile="$1"
     local outputFile="$2"
-    ffmpeg -i "${mediaFile}" -map 0:a -c:a copy "${outputFile}"
+    
+    local cmd="ffmpeg -i ${mediaFile} -map 0:a -c:a copy ${outputFile}"
+
+    printCommandHeader "${cmd}"
+    eval "${cmd}"
 }
 
 # extractVideo <media file> <output file>
@@ -84,7 +108,11 @@ function extractVideoFunc {
 
     local mediaFile="$1"
     local outputFile="$2"
-    ffmpeg -i "${mediaFile}" -map 0:v -c:v copy "${outputFile}"
+    
+    local cmd="ffmpeg -i ${mediaFile} -map 0:v -c:v copy ${outputFile}"
+
+    printCommandHeader "${cmd}"
+    eval "${cmd}"
 }
 
 function imageSongFunc {
@@ -97,7 +125,10 @@ function imageSongFunc {
     local songFile="$2"
     local outputFile="$3"
 
-    ffmpeg -loop 1 -framerate 1 -i ${imageFile} -i ${songFile} -c:v libx265 -c:a copy -shortest -pix_fmt yuv420p ${outputFile}
+    local cmd="ffmpeg -loop 1 -framerate 1 -i ${imageFile} -i ${songFile} -c:v libx265 -c:a copy -shortest -pix_fmt yuv420p ${outputFile}"
+
+    printCommandHeader "${cmd}"
+    eval "${cmd}"
 }
 
 function cutVideoFunc {
@@ -111,7 +142,10 @@ function cutVideoFunc {
     local end="$3"
     local outputFile="$4"
 
-    ffmpeg -i "${inputFile}" -ss "${start}" -to "${end}" -c copy "${outputFile}"
+    local cmd="ffmpeg -i ${inputFile} -ss ${start} -to ${end} -c copy ${outputFile}"
+
+    printCommandHeader "${cmd}"
+    eval "${cmd}"
 }
 
 function convertVideoTrackCrf {
@@ -126,14 +160,16 @@ function convertVideoTrackCrf {
     local crf="$4"
     local outputFile="$5"
     local duration="$6"
+    local cmd=''
 
     if [ -n "${duration}" ]; then
-        echo "ffmpeg -i ${mediaFile} -to ${duration} -map 0:v -c:v libx265 -crf ${crf} -vf scale=-2:${height}, fps=${fps} ${outputFile}"
-        ffmpeg -i "${mediaFile}" -to "${duration}" -acodec copy -c:v libx265 -crf ${crf} -vf "scale=-2:${height}, fps=${fps}" "${outputFile}"
+        cmd="ffmpeg -i ${mediaFile} -to ${duration} -acodec copy -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
     else
-        echo "ffmpeg -i ${mediaFile} -map 0:v -c:v libx265 -crf ${crf} -vf scale=-2:${height}, fps=${fps} ${outputFile}"
-        ffmpeg -i "${mediaFile}" -acodec copy -c:v libx265 -crf ${crf} -vf "scale=-2:${height}, fps=${fps}" "${outputFile}"
+        cmd="ffmpeg -i ${mediaFile} -acodec copy -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
     fi
+
+    printCommandHeader "${cmd}"
+    eval "${cmd}"
 }
 
 function convertVideoTrack {
@@ -178,6 +214,33 @@ function convertVideoFunc {
     local videoToolboxQuality=50
     local videoCodec='libx265'
     local previewOnly=false
+
+    # Define valid options array for reuse in help message
+    local validOptions=(
+        "height"
+        "width"
+        "fps"
+        "crf"
+        "bitrate"
+        "duration"
+        "preset"
+        "copyAudio"
+        "useVideoToolbox"
+        "preview"
+    )
+
+    # Helper function to generate options help text
+    local generateOptionsHelp() {
+        local opts=""
+        for opt in "${validOptions[@]}"; do
+            if [ -n "${opts}" ]; then
+                opts="${opts}, --${opt}"
+            else
+                opts="--${opt}"
+            fi
+        done
+        echo "${opts}"
+    }
 
     # Parse named parameters
     while [ "$#" -gt 0 ]; do
@@ -276,7 +339,7 @@ function convertVideoFunc {
             *)
                 echo "Unknown parameter: $1"
                 echo "Usage: convertVideoTrackOptions --mediaFile=<file> --outputFile=<file> [options]"
-                echo "Options: --height, --width, --fps, --crf, --bitrate, --duration, --preset, --copyAudio, --useVideoToolbx, --preview"
+                echo "Options: $(generateOptionsHelp)"
                 return 1
                 ;;
         esac
@@ -542,8 +605,9 @@ alias crypt="pushd ${REPO_PATH}/crypt; source venv/bin/activate; python main.py 
 alias priv='open -a "Google Chrome" --args --incognito --enable-logging --v=1'
 alias previewRandomFile='previewRandomFileFunc'
 alias flushDns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
-alias openHosts='sudo mv -v /etc/hosts /etc/hosts-open'
-alias closeHosts='sudo mv -v /etc/hosts-open /etc/hosts'
+alias openHosts="sudo mv -v ${HOSTS_PATH} ${HOSTS_PATH}-open"
+alias closeHosts="sudo mv -v ${HOSTS_PATH}-open ${HOSTS_PATH}"
+alias checkHosts="head -n 50 ${HOSTS_PATH}"
 alias grepF='grep -F'
 
 # Git --------
@@ -555,6 +619,7 @@ alias gs='git status'
 alias gf='git fetch --prune'
 alias gl='git log --oneline --graph'
 alias gsp='git stash save && git pull && git stash pop'
+alias gp='git pull'
 
 # Editing -------
 alias ffprobe='ffprobe -hide_banner'
