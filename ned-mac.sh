@@ -1,5 +1,19 @@
 echo 'BEGIN ned-mac.sh'
 
+# Set strict mode for non-interactive shells
+[[ $- != *i* ]] && set -Eeuo pipefail
+
+# set -Eeuo pipefail
+IFS=$'\n\t'
+
+# disable globbing (aggressive for most cases so disable by default)
+# set -f
+
+# debug only
+# set -x
+
+trap 'echo "Error: Command \"$BASH_COMMAND\" failed at line $LINENO" >&2' ERR
+
 # Set variables ---------------------------
 
 export DEV_PATH="${HOME}/dev"
@@ -9,6 +23,11 @@ export NED_MAC_PATH="${BASH_SETTINGS_PATH}/ned-mac.sh"
 export HOSTS_PATH='/etc/hosts'
 
 export MARS='UNDEFINED'
+
+# Ram drive
+export RAM="/Volumes/ramdisk"
+export BRAVE_RAM_CACHE="${RAM}/brave-cache"
+export CHROME_RAM_CACHE="${RAM}/chrome-cache"
 
 
 # Homebrew variables
@@ -20,9 +39,8 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 export PROMPT='%F{red}%h%f%F{blue}%n%f%?@%F{yellow}%~%f|%w|%*%# '
 
 # Update PATH
-#export PATH="${PATH}:${HOME}/dev/platform-tools:${HOME}/Library/Python/3.9/bin"
 export PATH="${PATH}:${HOME}/dev/bin/ffmpeg"
-
+export PATH="${PATH}:${HOME}/.local/bin"
 
 # Unused for now 20250426
 #export HISTFILE=/Users/ned/.ned_history
@@ -53,6 +71,82 @@ function printCommandHeader {
     echo "${cmd}"
     echo
     echo '---------------'
+}
+
+
+# ramdisk_size <MB>
+function ramdisk_size {
+    local usage='Usage: ramdisk_size <MB>'
+
+    if (( "$#" < 1 )); then
+        echo "${usage}"
+        return
+    fi
+
+    local mb="${1:-0}"
+    local result="$(( ${mb} * 1024 * 1024 / 512 ))"
+    echo "${result}"
+}
+
+function ramdisk {
+    local usage='Usage: ramdisk <MB> <name>'
+
+    if (( "$#" < 1 )); then
+        echo "${usage}"
+        return 1
+    fi
+
+    local mb="${1:-100}"
+    local name="${2:-ramdisk}"
+    
+    # Ensure size calculation is successful
+    local sectors="$(ramdisk_size ${mb})"
+
+    echo " -> 512-byte sectors: [${sectors}]"
+
+    if (( "${sectors}" < 100 )); then
+        echo "Error: Sectors [${sectors}] must be >= 100"
+        return
+    fi
+
+    # 1. Attach and capture device path
+    local ram_device=$(hdiutil attach -nomount "ram://${sectors}")
+    
+    if [[ -z "${ram_device}" ]]; then
+        echo "Error: Failed to create RAM drive"
+        return 1
+    fi
+
+    # 2. Erase/Format
+    if diskutil erasevolume APFSX "${name}" "${ram_device}"; then
+        # 3. Post-mount tweaks
+        mdutil -i off "/Volumes/${name}"
+        sudo tmutil addexclusion "/Volumes/${name}"
+        echo "RAM Disk '${name}' created at ${ram_device}"
+    else
+        echo "Error: Failed to format volume."
+        hdiutil detach "${ram_device}"
+        return 1
+    fi
+}
+
+# ramdisk <MB> <name>
+function ramdiskOld {
+    local usage='ramdisk <MB> <name>'
+
+    if [ "$#" -lt 1 ]; then
+        echo "${usage}"
+        return
+    fi
+
+    local mb="$1"
+    local name="${2:-ramdisk}"
+    local size="$(ramdisk_size ${mb})"
+
+    local ramdisk=$(hdiutil attach -nomount "ram://${size}")
+    diskutil erasevolume APFSX "${name}" "${ramdisk}"
+    mdutil -i off "/Volumes/${name}" #>/dev/null 2>&1
+    tmutil addexclusion "/Volumes/${name}" #>/dev/null 2>&1
 }
 
 
@@ -584,6 +678,13 @@ alias R="code ${BASH_SETTINGS_PATH}"
 
 alias ll='ls -alF'
 alias la='ls -A'
+
+alias cbrave="open -a 'Brave Browser' --args --disk-cache-dir=${BRAVE_RAM_CACHE}"
+alias cchrome="open -a 'Google Chrome' --args --disk-cache-dir=${CHROME_RAM_CACHE}"
+# alias clearBraveCache="rm -riv ${BRAVE_RAM_CACHE:?dflkdfjdk}/*"
+alias ramSize="du -h -d 1 ${RAM} | sort -h"
+
+
 #alias Y='~/dev/repos/yt-dlp/dist/yt-dlp_macos_arm64 --no-mtime'
 alias Y='yt-dlp --no-mtime'
 alias python='python3'
@@ -593,6 +694,7 @@ alias spot='pushd ~/dev/repos/onthespot/src; python -m onthespot; popd'
 #alias l='ls -a --classify --human-readable -l --reverse -t'
 
 # Mac
+alias aliases='alias | sort'
 alias l='ls -alFGhrt'
 alias history='history -500'
 alias networkUp='watch -n 3 ping -c 1 google.com'
@@ -609,6 +711,17 @@ alias openHosts="sudo mv -v ${HOSTS_PATH} ${HOSTS_PATH}-open"
 alias closeHosts="sudo mv -v ${HOSTS_PATH}-open ${HOSTS_PATH}"
 alias checkHosts="head -n 50 ${HOSTS_PATH}"
 alias grepF='grep -F'
+
+# RAM Drive
+alias createRamdrive="zsh ${BASH_SETTINGS_PATH}/scripts/createRamdisk.zsh 4096"
+
+# Font smoothing
+alias checkFontSmoothing='defaults read -g AppleFontSmoothing'
+alias resetFontSmoothing='defaults delete -g AppleFontSmoothing'
+
+# Set value 0-3
+alias setFontSmoothing='defaults write -g AppleFontSmoothing -int '
+
 
 # Git --------
 alias ga='git add'

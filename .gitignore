@@ -4,4 +4,7 @@
 !.bashrc
 !.bash_aliases
 !*.sh
-# test5
+!scripts
+!*.py
+!*.zsh
+!*.txt
