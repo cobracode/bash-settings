@@ -75,6 +75,7 @@ setupFolders() {
         'brave-cache'
         'google-earth-cache'
         'spotify-cache'
+        'omlx'
     )
 
     print

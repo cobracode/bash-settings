@@ -30,6 +30,9 @@ export RAM="/Volumes/ramdisk"
 export BRAVE_RAM_CACHE="${RAM}/brave-cache"
 export CHROME_RAM_CACHE="${RAM}/chrome-cache"
 
+# App cache dirs
+export SPOTIFY_CACHE=''
+
 
 # Homebrew variables
 eval "$(/opt/homebrew/bin/brew shellenv)"
