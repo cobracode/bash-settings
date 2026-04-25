@@ -23,6 +23,7 @@ export NED_MAC_PATH="${BASH_SETTINGS_PATH}/ned-mac.sh"
 export HOSTS_PATH='/etc/hosts'
 
 export MARS='UNDEFINED'
+WEATHER_FILE="${DEV_PATH}/.weather.dat"
 
 # Ram drive
 export RAM="/Volumes/ramdisk"
@@ -614,6 +615,18 @@ function combineVideoAudioFunc {
 }
 
 
+function setWeatherFunc {
+    local file="${WEATHER_FILE}"
+
+    if [[ -f "${file}" ]] && [[ -s "${file}" ]]; then
+        export WEATHER="$(cat ${file} | xargs)"
+        echo 'Weather is set'
+    else
+        echo "⚠️ ${file} not found or empty" >&2
+    fi
+}
+
+
 
 function generatePgpKey {
     # Generate key with RSA 4096 bits and no expiry for Proton Mail
@@ -683,6 +696,8 @@ alias cbrave="open -a 'Brave Browser' --args --disk-cache-dir=${BRAVE_RAM_CACHE}
 alias cchrome="open -a 'Google Chrome' --args --disk-cache-dir=${CHROME_RAM_CACHE}"
 # alias clearBraveCache="rm -riv ${BRAVE_RAM_CACHE:?dflkdfjdk}/*"
 alias ramSize="du -h -d 1 ${RAM} | sort -h"
+alias setWeather='setWeatherFunc'
+
 
 
 #alias Y='~/dev/repos/yt-dlp/dist/yt-dlp_macos_arm64 --no-mtime'
@@ -703,7 +718,7 @@ alias localIp='ipconfig getifaddr en0'
 alias t='my_traceroute'
 alias c='curl --connect-timeout 5 --verbose astro.com'
 alias brewSpace='du -sch $(brew --cellar)/*/* | sed "s|$(brew --cellar)/\([^/]*\)/.*|\1|" | sort -k1h'
-alias crypt="pushd ${REPO_PATH}/crypt; source venv/bin/activate; python main.py & deactivate; popd"
+alias crypt="pushd ${REPO_PATH}/crypt; source .venv/bin/activate; python main.py & deactivate; popd"
 alias priv='open -a "Google Chrome" --args --incognito --enable-logging --v=1'
 alias previewRandomFile='previewRandomFileFunc'
 alias flushDns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
