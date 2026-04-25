@@ -697,6 +697,7 @@ alias cchrome="open -a 'Google Chrome' --args --disk-cache-dir=${CHROME_RAM_CACH
 # alias clearBraveCache="rm -riv ${BRAVE_RAM_CACHE:?dflkdfjdk}/*"
 alias ramSize="du -h -d 1 ${RAM} | sort -h"
 alias setWeather='setWeatherFunc'
+alias getWeather='printf %s "${WEATHER}" | pbcopy'
 
 
 
