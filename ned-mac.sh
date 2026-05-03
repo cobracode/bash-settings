@@ -261,9 +261,11 @@ function convertVideoTrackCrf {
     local cmd=''
 
     if [ -n "${duration}" ]; then
-        cmd="ffmpeg -i ${mediaFile} -to ${duration} -acodec copy -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
+        cmd="ffmpeg -i ${mediaFile} -to ${duration} -acodec copy -c:v hevc_videotoolbox -q:v ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
+        # cmd="ffmpeg -i ${mediaFile} -to ${duration} -acodec copy -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
     else
-        cmd="ffmpeg -i ${mediaFile} -acodec copy -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
+        cmd="ffmpeg -i ${mediaFile} -acodec copy -c:v hevc_videotoolbox -q:v ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
+        # cmd="ffmpeg -i ${mediaFile} -acodec copy -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
     fi
 
     printCommandHeader "${cmd}"
@@ -732,7 +734,7 @@ alias checkHosts="head -n 50 ${HOSTS_PATH}"
 alias grepF='grep -F'
 
 # RAM Drive
-alias createRamdrive="zsh ${BASH_SETTINGS_PATH}/scripts/createRamdisk.zsh 4096"
+alias createRamdrive="zsh ${BASH_SETTINGS_PATH}/scripts/createRamdisk.zsh 8192"
 
 # Font smoothing
 alias checkFontSmoothing='defaults read -g AppleFontSmoothing'
