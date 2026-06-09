@@ -663,6 +663,16 @@ function vidHereFunc {
     echo "\"${vid}\""
 }
 
+# Usage: <file> <position>
+toggle_byte() {
+    local file="$1"
+    local pos="$2"
+    local byte=$(dd if="$file" bs=1 count=1 skip="$pos" 2>/dev/null | xxd -p)
+    local xored=$(printf "%02x" $((0x$byte ^ 0x01)))
+    printf "\x$xored" | dd of="$file" bs=1 seek="$pos" conv=notrunc 2>/dev/null
+}
+
+
 
 
 #  AWS
