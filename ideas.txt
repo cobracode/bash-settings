@@ -1,0 +1,69 @@
+Power User Mac Functions - Ideas
+
+Process & Port Management
+===========================
+- killApp <name>: pkill -f <name> or killall with fuzzy matching (e.g., killApp chrome kills the whole app)
+- whatPort <port>: lsof -i :<port> to show what's using a port
+- listenPorts: lsof -iTCP -sTCP:LISTEN -P | grep -v PID to list all listening ports
+- topMem: top processes by memory (curated top-10)
+
+System Info & Monitoring
+=========================
+- sysInfo: macOS version, kernel, uptime, CPU, memory, disk usage in one tidy output
+- batteryHealth: system_profiler SPPowerDataType showing cycle count, condition, max capacity
+- checkFirewall: osascript -e 'tell application "System Events" to get the state of the firewall'
+- sysSIP: csrutil status for SIP status
+- whichGpu: show which GPU(s) are in use and their details
+
+Networking Power Tools
+=======================
+- speedTest: curl -o /dev/null -w against a CDN for download speed
+- traceroute: general t <host> with sensible defaults
+- dnsLookup <domain>: dig +short or nslookup
+
+File & Storage
+===============
+- duTop: du -h -d 1 . | sort -hr | head -20 (large files quick scan)
+- findDups: find duplicate files by hash (md5/sha256)
+- emptyTrash: rm -rf ~/.Trash/* with confirmation
+- whichFile <pattern>: mdfind wrapper (Spotlight search from CLI)
+
+App & Service Control
+=======================
+- brewUpdate: brew update && brew upgrade && brew cleanup && brew doctor
+- disableSpotlight: sudo mdutil -i off / (toggle with same command)
+- resetSpotlight: sudo mdutil -i on /
+- disableSip: helper for SIP via Recovery Mode
+
+Terminal Productivity
+======================
+- tmuxAttachOrNew: tmux attach -t default 2>/dev/null || tmux new -s default
+- historySearch: fzf or zsh history search integration
+- jumpDir <name>: jump to a frequently-used directory
+
+Audio & Video
+==============
+- audioOut: list or switch audio output devices
+- screenRecord: swiftscreenrecord or QuickTime via osascript
+- resizeImage <in> <out> <width>: ImageMagick/ImageEvents wrapper
+
+Quick Utilities
+================
+- nowTime: date +%s (unix timestamp)
+- base64Enc: encode to base64
+- base64Dec: decode from base64
+- hashIt <input>: sha256/md5 hash
+- passwordGen <len>: openssl rand -hex 20 or similar
+- catHex: xxd or hexdump with formatting
+- ipAll: show all IP addresses (en0, en1, etc.)
+- wifiList: list available networks with signal strength (airport -s)
+- wifiConnect <ssid> <pass>: connect to WiFi
+- wifiForget <ssid>: forget WiFi network
+
+Priority Order (Most Useful First)
+===================================
+1. killApp and whatPort — everyday friction reducers
+2. sysInfo and batteryHealth — useful for diagnostics
+3. brewUpdate — quick maintenance
+4. wifiConnect / wifiForget — frequent power-user task
+5. passwordGen / base64* / hashIt — quick utilities

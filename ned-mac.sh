@@ -726,7 +726,7 @@ toggle_byte() {
 }
 
 
-#ntoggle_bytes <file> <N> - Toggle the least significant bit of each byte in the first N bytes of a file
+# toggle_bytes <file> <N> - Toggle the least significant bit of each byte in the first N bytes of a file
 function toggle_bytes {
     local file="$1"
     local N="$2"
@@ -734,11 +734,6 @@ function toggle_bytes {
 
     if [ "$#" -ne 2 ]; then
         echo "${usage} requires exactly 2 arguments: the file and the number of bytes"
-        return 1
-    fi
-
-    if [ ! -f "${NED_MAC_PATH}" ]; then
-        echo "Error: '${NED_MAC_PATH}' does not exist. First source bash settings"
         return 1
     fi
 
@@ -752,24 +747,13 @@ function toggle_bytes {
         return 1
     fi
 
-    # Read the first N bytes
-    headPart=$(dd if="$file" bs=1 count="$N" 2>/dev/null)
-
-    # Flip each byte's LSB
     local flipCount=0
     while [ "$flipCount" -lt "$N" ]; do
-        local byte=$(dd if=/tmp/bytes bs=1 count=1 skip="$flipCount" 2>/dev/null | xxd -p)
-        local flippedByte=$(printf "0x%x 0x1" "$byte" | bc -l | tr -d '\n\r' | cut -c3)
-        printf "\x${flippedByte}" | dd of=/tmp/flippedBytes bs=1 seek="$flipCount" conv=notrunc count=1
+        local byte=$(dd if="$file" bs=1 count=1 skip="$flipCount" 2>/dev/null | xxd -p)
+        local xored=$((0x$byte ^ 0x01))
+        printf "\x$(printf '%02x' $xored)" | dd of="$file" bs=1 seek="$flipCount" conv=notrunc count=1
         flipCount=$((flipCount+1))
     done
-    rm /tmp/bytes
-    unset headPart
-
-    # Write back to the original file
-    dd if=/tmp/flippedBytes of="$file" seek=0 conv=notrunc
-    rm /tmp/flippedBytes
-    unset flipCount
 
     echo "Toggled the LSB of ${N} bytes in file '$file'"
     return 0
@@ -788,6 +772,37 @@ function awsIdentityFunc {
     aws sts get-caller-identity --profile "${profile}"
 }
 
+
+# networkStats - Prints detailed network statistics
+function networkStats {
+    echo '========== NETWORK STATISTICS =========='
+    echo "Timestamp: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    echo
+
+    echo '--- Interfaces ---'
+    networksetup -listallhardwareports 2>/dev/null | grep -E '(Hardware Port|Ethernet Address|Device)' | paste - - - | column -t
+    echo
+
+    echo '--- IP Addresses ---'
+    networksetup -getinfo Wi-Fi 2>/dev/null | grep -E '(IP address|Router|Subnet mask|DNS)'
+    echo
+    networksetup -getinfo Ethernet 2>/dev/null | grep -E '(IP address|Router|Subnet mask|DNS)'
+    echo
+
+    echo '--- Default Route ---'
+    netstat -rn 2>/dev/null | grep 'default'
+    echo
+
+    echo '--- DNS Servers ---'
+    scutil --dns 2>/dev/null | grep 'nameserver' | head -5
+    echo
+
+    echo '--- Active Connections ---'
+    netstat -an 2>/dev/null | awk '/^tcp/ {print $6}' | sort | uniq -c | sort -rn | head -10
+    echo
+
+    echo '========== END NETWORK STATISTICS =========='
+}
 
 # Aliases -------------------------------
 
@@ -833,6 +848,7 @@ alias aliases='alias | sort'
 alias l='ls -alFGhrt'
 alias history='history -500'
 alias networkUp='watch -n 3 ping -c 1 google.com'
+alias networkStats='networkStats'
 alias publicIp='curl ifconfig.me'
 alias localIp='ipconfig getifaddr en0'
 alias t='my_traceroute'
