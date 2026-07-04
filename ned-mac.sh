@@ -12,7 +12,7 @@ IFS=$'\n\t'
 # debug only
 # set -x
 
-trap 'echo "Error: Command \"$BASH_COMMAND\" failed at line $LINENO" >&2' ERR
+# trap 'echo "Error: Command \"$BASH_COMMAND\" failed at line $LINENO" >&2' ERR
 
 # Set variables ---------------------------
 
@@ -247,25 +247,78 @@ function cutVideoFunc {
 }
 
 function convertVideoTrackCrf {
-    if [ "$#" -lt 5 ]; then
-        echo 'convertVideoTrackCrf <media file> <height> <fps> <crf> <output file> <duration>'
+    local duration=""
+    local videoFilters=""
+    local volumeDb=""
+
+    local positional=()
+
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            --duration=*)
+                duration="${1#--duration=}"
+                shift
+                ;;
+            --duration)
+                duration="$2"
+                shift 2
+                ;;
+            --videoFilters=*)
+                videoFilters="${1#--videoFilters=}"
+                shift
+                ;;
+            --videoFilters)
+                videoFilters="$2"
+                shift 2
+                ;;
+            --volumeDb=*)
+                volumeDb="${1#--volumeDb=}"
+                shift
+                ;;
+            --volumeDb)
+                volumeDb="$2"
+                shift 2
+                ;;
+            *)
+                positional+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    if [ "${#positional[@]}" -lt 5 ]; then
+        echo 'convertVideoTrackCrf <media file> <height> <fps> <crf> <output file> [<duration>] [--volumeDb <dB>]'
+        echo '  Optional: --duration (seconds), --volumeDb=<dB> or --volumeDb <dB> (ffmpeg volume filter; re-encodes audio as AAC)'
         return
     fi
 
-    local mediaFile="$1"
-    local height="$2"
-    local fps="$3"
-    local crf="$4"
-    local outputFile="$5"
-    local duration="$6"
+    local mediaFile="${positional[1]}"
+    local height="${positional[2]}"
+    local fps="${positional[3]}"
+    local crf="${positional[4]}"
+    local outputFile="${positional[5]}"
     local cmd=''
+    local audioCodecArgs='-acodec copy'
+    local videoFiltersArgs=''
 
-    if [ -n "${duration}" ]; then
-        cmd="ffmpeg -i ${mediaFile} -to ${duration} -acodec copy -c:v hevc_videotoolbox -q:v ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
-        # cmd="ffmpeg -i ${mediaFile} -to ${duration} -acodec copy -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
+    if [[ -n "${volumeDb}" ]]; then
+        # opus currently not supported, but would use it if so
+        audioCodecArgs="-af 'volume=${volumeDb}dB' -c:a aac"
+    fi
+
+    if [[ -n "${videoFilters}" ]]; then
+        videoFiltersArgs="-vf 'format=rgb24,${videoFilters},scale=-2:${height}, fps=${fps},format=yuv420p'"
+        # videoFiltersArgs="-vf 'format=rgb24,${videoFilters},scale=-2:${height}, fps=${fps},format=yuv420p'"
     else
-        cmd="ffmpeg -i ${mediaFile} -acodec copy -c:v hevc_videotoolbox -q:v ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
-        # cmd="ffmpeg -i ${mediaFile} -acodec copy -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
+        videoFiltersArgs="-vf 'scale=-2:${height}, fps=${fps}'"
+    fi
+
+    if [[ -n "${duration}" ]]; then
+        cmd="ffmpeg -i ${mediaFile} ${videoFiltersArgs} -to ${duration} ${audioCodecArgs} -c:v hevc_videotoolbox -q:v ${crf} -tag:v hvc1 ${outputFile}"
+        # cmd="ffmpeg -i ${mediaFile} -to ${duration} ${audioCodecArgs} -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
+    else
+        cmd="ffmpeg -i ${mediaFile} ${videoFiltersArgs} ${audioCodecArgs} -c:v hevc_videotoolbox -q:v ${crf} -tag:v hvc1 ${outputFile}"
+        # cmd="ffmpeg -i ${mediaFile} ${audioCodecArgs} -c:v libx265 -crf ${crf} -vf 'scale=-2:${height}, fps=${fps}' ${outputFile}"
     fi
 
     printCommandHeader "${cmd}"
@@ -671,6 +724,57 @@ toggle_byte() {
     local xored=$(printf "%02x" $((0x$byte ^ 0x01)))
     printf "\x$xored" | dd of="$file" bs=1 seek="$pos" conv=notrunc 2>/dev/null
 }
+
+
+#ntoggle_bytes <file> <N> - Toggle the least significant bit of each byte in the first N bytes of a file
+function toggle_bytes {
+    local file="$1"
+    local N="$2"
+    local usage='toggle_bytes<file><N>'
+
+    if [ "$#" -ne 2 ]; then
+        echo "${usage} requires exactly 2 arguments: the file and the number of bytes"
+        return 1
+    fi
+
+    if [ ! -f "${NED_MAC_PATH}" ]; then
+        echo "Error: '${NED_MAC_PATH}' does not exist. First source bash settings"
+        return 1
+    fi
+
+    if [ ! -f "$file" ]; then
+        echo "Error: File '$file' does not exist"
+        return 1
+    fi
+
+    if ! [[ "$N" =~ ^[0-9]+$ ]] || [ "$N" -lt 1 ]; then
+        echo "Error: N must be a positive integer"
+        return 1
+    fi
+
+    # Read the first N bytes
+    headPart=$(dd if="$file" bs=1 count="$N" 2>/dev/null)
+
+    # Flip each byte's LSB
+    local flipCount=0
+    while [ "$flipCount" -lt "$N" ]; do
+        local byte=$(dd if=/tmp/bytes bs=1 count=1 skip="$flipCount" 2>/dev/null | xxd -p)
+        local flippedByte=$(printf "0x%x 0x1" "$byte" | bc -l | tr -d '\n\r' | cut -c3)
+        printf "\x${flippedByte}" | dd of=/tmp/flippedBytes bs=1 seek="$flipCount" conv=notrunc count=1
+        flipCount=$((flipCount+1))
+    done
+    rm /tmp/bytes
+    unset headPart
+
+    # Write back to the original file
+    dd if=/tmp/flippedBytes of="$file" seek=0 conv=notrunc
+    rm /tmp/flippedBytes
+    unset flipCount
+
+    echo "Toggled the LSB of ${N} bytes in file '$file'"
+    return 0
+}
+
 
 
 
